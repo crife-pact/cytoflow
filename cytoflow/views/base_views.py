@@ -2,7 +2,7 @@
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,9 +26,9 @@ from traits.api import HasStrictTraits, Str, Tuple, List, Dict, provides
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-import numpy as np
 import seaborn as sns
 import pandas as pd
+from natsort import natsorted
 
 from warnings import warn
 
@@ -85,6 +85,11 @@ class BaseView(HasStrictTraits):
         sharex, sharey : bool
             If there are multiple subplots, should they share axes?  Defaults
             to `True`.
+
+        row_order, col_order, hue_order : list
+            Override the row/column/hue facet value order with the given list.
+            If a value is not given in the ordering, it is not plotted.
+            Defaults to a "natural ordering" of all the values.
             
         height : float
             The height of *each row* in inches.  Default = 3.0
@@ -169,15 +174,18 @@ class BaseView(HasStrictTraits):
                      util.CytoflowViewWarning)
                 
             
+        col_order = kwargs.pop("col_order", (natsorted(data[self.xfacet].unique()) if self.xfacet else None))
+        row_order = kwargs.pop("row_order", (natsorted(data[self.yfacet].unique()) if self.yfacet else None))
+        hue_order = kwargs.pop("hue_order", (natsorted(data[self.huefacet].unique()) if self.huefacet else None))
         g = sns.FacetGrid(data, 
                           height = height,
                           aspect = aspect,
                           col = (self.xfacet if self.xfacet else None),
                           row = (self.yfacet if self.yfacet else None),
                           hue = (self.huefacet if self.huefacet else None),
-                          col_order = (np.sort(data[self.xfacet].unique()) if self.xfacet else None),
-                          row_order = (np.sort(data[self.yfacet].unique()) if self.yfacet else None),
-                          hue_order = (np.sort(data[self.huefacet].unique()) if self.huefacet else None),
+                          col_order = col_order,
+                          row_order = row_order,
+                          hue_order = hue_order,
                           col_wrap = col_wrap,
                           legend_out = False,
                           sharex = sharex,
@@ -242,7 +250,9 @@ class BaseView(HasStrictTraits):
             if cmap and norm:
                 plot_ax = plt.gca()
                 cax, _ = mpl.colorbar.make_axes(plt.gcf().get_axes())
-                mpl.colorbar.ColorbarBase(cax, cmap, norm)
+                mpl.colorbar.ColorbarBase(cax, 
+                                          cmap = cmap, 
+                                          norm = norm)
                 plt.sca(plot_ax)
             elif self.huefacet:
         

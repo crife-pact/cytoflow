@@ -2,7 +2,7 @@
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -396,8 +396,8 @@ class DensityGateOp(HasStrictTraits):
             
             group_idx = groupby.groups[group]
             
-            cX = pd.cut(group_data[self.xchannel], self._xbins, include_lowest = True, labels = False)
-            cY = pd.cut(group_data[self.ychannel], self._ybins, include_lowest = True, labels = False)
+            cX = pd.cut(group_data[self.xchannel], self._xbins, include_lowest = True, labels = False).reset_index(drop = True)
+            cY = pd.cut(group_data[self.ychannel], self._ybins, include_lowest = True, labels = False).reset_index(drop = True)
 
             group_keep = pd.Series([False] * len(group_data))
             

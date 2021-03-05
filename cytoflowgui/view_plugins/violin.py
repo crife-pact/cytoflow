@@ -2,7 +2,7 @@
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019 2015-2017
+# (c) Brian Teague 2018-2021 2015-2017
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -246,7 +246,8 @@ def _dump(view):
                 huescale = view.huescale,
                 plotfacet = view.plotfacet,
                 subset_list = view.subset_list,
-                plot_params = view.plot_params)
+                plot_params = view.plot_params,
+                current_plot = view.current_plot)
     
 @camel_registry.dumper(ViolinPlotPluginView, 'violin-plot', version = 1)
 def _dump_v1(view):

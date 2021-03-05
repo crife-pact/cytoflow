@@ -2,7 +2,7 @@
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -236,7 +236,7 @@ class ExportFCS(HasStrictTraits):
                             '$ENDANALYSIS', '$BEGINDATA', '$ENDDATA',
                             '$BYTEORD', '$DATATYPE', '$MODE', '$NEXTDATA', 
                             '$TOT', '$PAR']
-        common_metadata = {k : v for k, v in common_metadata.items()
+        common_metadata = {str(k) : str(v) for k, v in common_metadata.items()
                            if re.search('^\$P\d+[BENRDSG]$', k) is None
                            and k not in exclude_keywords}
         

@@ -2,7 +2,7 @@
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -22,14 +22,6 @@ Created on Mar 8, 2015
 
 @author: brian
 """
-
-# for local debugging
-if __name__ == '__main__':
-    from traits.etsconfig.api import ETSConfig
-    ETSConfig.toolkit = 'qt4'
-
-    import os
-    os.environ['TRAITS_DEBUG'] = "1"
 
 from traits.api import HasTraits
 

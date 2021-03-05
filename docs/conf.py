@@ -1,4 +1,21 @@
 # -*- coding: utf-8 -*-
+
+# (c) Massachusetts Institute of Technology 2015-2018
+# (c) Brian Teague 2018-2021
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 #
 # CytoFlow documentation build configuration file, created by
 # sphinx-quickstart on Fri Mar  6 19:42:50 2015.
@@ -16,6 +33,13 @@ import sys, os, glob, pathlib, shutil
 
 # are we running on RTD?
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+
+# select the 'null' pyface toolkit. an exception is raised if the qt toolkit
+# is subsequently imported, but that's better than trying to actually create
+# a Qt app if PyQt is accidentally imported.
+
+from traits.etsconfig.api import ETSConfig
+ETSConfig.toolkit = 'null'
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -56,9 +80,13 @@ autosummary_generate = True
 
 # autodoc options
 autodoc_member_order = 'bysource'
-if on_rtd:
-    autodoc_mock_imports = ['cytoflow.utility.logicle_ext.Logicle']
+#autodoc_mock_imports = ['pyface.qt', 'pyface.ui.qt4', 'traitsui.qt4']
+autodoc_mock_imports = ['traitsui.qt4']
 
+
+if on_rtd:
+    autodoc_mock_imports.append('cytoflow.utility.logicle_ext.Logicle')
+    
 # napoleon options
 napoleon_use_param = False
 
@@ -76,8 +104,8 @@ plot_pre_code = "import matplotlib.pyplot as plt; plt.switch_backend('agg')"
 
 # intersphinx config
 intersphinx_mapping = {'pandas' : ('http://pandas.pydata.org/pandas-docs/stable/', None),
-                       'envisage' : ('http://docs.enthought.com/envisage/', None),
-                       'traits' : ('http://docs.enthought.com/traits/', None)} 
+                       'envisage' : ('https://docs.enthought.com/envisage/', None),
+                       'traits' : ('https://docs.enthought.com/traits/', None)} 
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -326,13 +354,13 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 def setup(app):
-    app.connect('builder-inited', run_apidoc)
+    # app.connect('builder-inited', run_apidoc)
     app.connect('builder-inited', set_builder_config)
-    app.connect('build-finished', cleanup_apidoc)
+    # app.connect('build-finished', cleanup_apidoc)
     app.connect('build-finished', copy_embedded_help)
 
-
     sys.modules['sys'].IN_SPHINX = True
+    
         
 def set_builder_config(app):
     if app.builder.name == 'embedded_help':  # @UndefinedVariable
@@ -356,35 +384,52 @@ def run_apidoc(app):
 
     from sphinx.ext.apidoc import main
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-    cur_dir = os.path.abspath(os.path.dirname(__file__))
-    
-    try:
-        filelist = glob.glob(os.path.join(cur_dir, "cytoflow*.rst"))
-        for f in filelist:
-            os.unlink(f)
-    except FileNotFoundError:
-        pass
+    curr_dir = pathlib.Path(os.path.abspath(os.path.dirname(__file__)))
      
-    if app.builder.name == 'embedded_help':  # @UndefinedVariable
-        module = os.path.join(cur_dir,"..","cytoflowgui")        
-        main(['-T', '-e', '-E', '-f', '-o', cur_dir, module, module + "/tests/*"])    
-    else:
-        module = os.path.join(cur_dir,"..","cytoflow")    
-        main(['-T', '-e', '-E', '-f', '-o', cur_dir, module, module + "/tests/*"])
+    # only build the API docs if we're NOT building the embedded help
+    if app.builder.name != 'embedded_help':  # @UndefinedVariable
+        output_dir = curr_dir / "dev_manual" / "reference"
         
-def cleanup_apidoc(app, exc):  # @UnusedVariable
-    cur_dir = os.path.abspath(os.path.dirname(__file__))
+        # remove stale API docs
+        try:
+            filelist = glob.glob(str(output_dir / "cytoflow*.rst"))
+            for f in filelist:
+                os.unlink(f)
+        except FileNotFoundError:
+            pass
+        
+        module = curr_dir / ".." / "cytoflow"    
+        main(['-T', '-e', '-E', '-f', '-o', str(output_dir), str(module), str(module / "tests" / "*")])
     
+    # always build the GUI docs
+    output_dir = curr_dir / "user_manual" / "reference"
+    module = curr_dir / ".." / "cytoflowgui"        
+    
+    # remove stale GUI docs
     try:
-        filelist = glob.glob(os.path.join(cur_dir, "cytoflow*.rst"))
+        filelist = glob.glob(str(output_dir / "cytoflow*.rst"))
         for f in filelist:
             os.unlink(f)
     except FileNotFoundError:
         pass
+    
+    main(['-T', '-e', '-E', '-f', '-o', str(output_dir), str(module), str(module / "tests" / "*")])    
+
+def cleanup_apidoc(app, exc):  # @UnusedVariable
+    dirs = [pathlib.Path(os.path.abspath(os.path.dirname(__file__))) / d / "reference"
+            for d in ["user_manual", "dev_manual"]]
+    
+    for d in dirs:
+        try:
+            filelist = glob.glob(str(d / "cytoflow*.rst"))
+            for f in filelist:
+                os.unlink(f)
+        except FileNotFoundError:
+            pass
 
 def copy_embedded_help(app, exc):  # @UnusedVariable
     if app.builder.name == 'embedded_help':
-        dest_dir = pathlib.Path(__file__).parents[1].joinpath('cytoflowgui', 'help').as_posix()
+        dest_dir = pathlib.Path(__file__).parents[1].joinpath('cytoflowgui', 'help')
         print("Copying {} to {}".format(app.outdir, dest_dir))
         shutil.rmtree(dest_dir, ignore_errors = True)
         shutil.copytree(app.outdir, dest_dir)

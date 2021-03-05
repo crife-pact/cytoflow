@@ -2,7 +2,7 @@
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -352,7 +352,8 @@ def _load(data, version):
 @camel_registry.dumper(KMeansPluginView, 'kmeans-view', version = 2)
 def _dump_view(view):
     return dict(op = view.op,
-                plot_params = view.plot_params)
+                plot_params = view.plot_params,
+                current_plot = view.current_plot)
     
 @camel_registry.dumper(KMeansPluginView, 'kmeans-view', version = 1)
 def _dump_view_v1(view):

@@ -2,7 +2,7 @@
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,11 +23,11 @@ Created on Feb 11, 2015
 @author: brian
 """
 
-import os.path, webbrowser, pathlib
+import os.path, webbrowser, pathlib, sys
 
 import yaml.parser
 
-from traits.api import Instance, List, on_trait_change, Unicode
+from traits.api import Instance, List, Str, on_trait_change
 from pyface.tasks.api import Task, TaskLayout, PaneItem, VSplitter
 from pyface.tasks.action.api import SMenu, SMenuBar, SToolBar, TaskAction, TaskToggleGroup
 from pyface.api import (FileDialog, ImageResource, AboutDialog, information, 
@@ -45,8 +45,6 @@ from cytoflowgui.view_plugins import IViewPlugin, VIEW_PLUGIN_EXT
 from cytoflowgui.workflow_item import WorkflowItem
 from cytoflowgui.util import DefaultFileDialog
 from cytoflowgui.serialization import save_yaml, load_yaml, save_notebook
-
-from cytoflowgui.mailto import mailto
 
 class FlowTask(Task):
     """
@@ -134,7 +132,7 @@ class FlowTask(Task):
     
     # the file to save to if the user clicks "save" and has already clicked
     # "open" or "save as".
-    filename = Unicode
+    filename = Str
         
     def initialized(self):
         if self.filename:
@@ -278,6 +276,15 @@ class FlowTask(Task):
                   .format(e.__class__.__name__, path, str(e)))
             return
         
+        # are we just running a smoke test?
+        if 'startup_test' in new_workflow[0].metadata:
+            def quit_app(app):
+                app.exit(force = True)
+                
+            from pyface.timer.api import do_after
+            do_after(5*1000, quit_app, self.application)
+            return
+            
         # check that the FCS files are all there
         
         wi = new_workflow[0]
@@ -339,12 +346,15 @@ class FlowTask(Task):
         for wi in self.model.workflow:
             wi.lock.release()
             
-        ret = confirm(parent = None,
-                      message = "Do you want to execute the workflow now?",
-                      title = "Run workflow?")
-        
-        if ret == YES:
+        if self.model.debug:
             self.model.run_all()
+        else:
+            ret = confirm(parent = None,
+                          message = "Do you want to execute the workflow now?",
+                          title = "Run workflow?")
+            
+            if ret == YES:
+                self.model.run_all()
 
         
     def on_save(self):
@@ -414,17 +424,15 @@ class FlowTask(Task):
         log = str(self._get_package_versions()) + "\n" + self.application.application_log.getvalue()
         
         msg = "The best way to report a problem is send an application log to " \
-              "the developer.  You can do so by either sending me an email " \
-              "with the log in it, or saving the log to a file and filing a " \
+              "the developers.  If you click 'Yes' below, you will be given then " \
+              "opportunity to save the log to a file and then file a " \
               "new issue on GitHub at " \
-              "https://github.com/bpteague/cytoflow/issues/new" 
+              "https://github.com/cytoflow/cytoflow/issues/new" 
         
         dialog = ConfirmationDialog(message = msg,
-                                    informative = "Which would you like to do?",
-                                    yes_label = "Send an email...",
-                                    no_label = "Save to a file...")
+                                    informative = "Would you like to report an issue to the developers?")
                 
-        if dialog.open() == NO:
+        if dialog.open() == YES:
             dialog = DefaultFileDialog(parent = self.window.control,
                                        action = 'save as', 
                                        default_suffix = "log",
@@ -435,45 +443,11 @@ class FlowTask(Task):
                 with open(dialog.path, 'w') as f:
                     f.write(log)
                   
-                webbrowser.open_new_tab("https://github.com/bpteague/cytoflow/issues/new")
+                webbrowser.open_new_tab("https://github.com/cytoflow/cytoflow/issues/new")
                   
             return
-        
-        information(None, "I'll now try to open your email client and create a "
-                    "new message to the developer.  Debugging logs are "
-                    "attached.  Please fill out the template bug report and " 
-                    "send -- thank you for reporting a bug!")
-
-        log = self.application.application_log.getvalue()
-        
-        versions = ["{0} {1}".format(key, value) for key, value in self._get_package_versions().items()]
-
-        body = """
-Thank you for your bug report!  Please fill out the following template.
-
-PLATFORM (Mac, PC, Linux, other):
-
-OPERATING SYSTEM (eg OSX 10.7, Windows 8.1):
-
-SEVERITY (Critical? Major? Minor? Enhancement?):
-
-DESCRIPTION:
-  - What were you trying to do?
-  - What happened?
-  - What did you expect to happen?
-  
-PACKAGE VERSIONS: {0}
-
-DEBUG LOG: {1}
-""".format(versions, log)
-
-        mailto("bpteague@gmail.com", 
-               subject = "Cytoflow bug report",
-               body = body)
     
-    def _get_package_versions(self):
-    
-        import sys
+    def _get_package_versions(self):    
         from cytoflow import __version__ as cf_version
         from fcsparser import __version__ as fcs_version
         from pandas import __version__ as pd_version

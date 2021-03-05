@@ -2,7 +2,7 @@
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,7 +23,7 @@ Created on Apr 18, 2015
 @author: brian
 '''
 
-from traits.api import Unicode
+from traits.api import Str
 from pyface.ui.qt4.file_dialog import FileDialog
 
 from queue import PriorityQueue
@@ -63,7 +63,7 @@ def filter_unpicklable(obj):
             return obj
         
 class DefaultFileDialog(FileDialog):
-    default_suffix = Unicode
+    default_suffix = Str
     
     def _create_control(self, parent):
         dlg = FileDialog._create_control(self, parent)
@@ -136,3 +136,15 @@ class HintedWidget(QtGui.QWidget):
             
         return hint
 
+# logging helper
+import logging 
+
+class CallbackHandler(logging.Handler):
+    def __init__(self, callback, **kwargs):
+        super().__init__(**kwargs)
+        self._callback = callback
+        
+    def emit(self, record):
+        self._callback(record)
+        
+    

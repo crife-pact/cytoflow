@@ -2,7 +2,7 @@
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,7 +31,7 @@ from test_base import ImportedDataTest  # @UnresolvedImport
 class TestRadviz(ImportedDataTest):
 
     def setUp(self):
-        ImportedDataTest.setUp(self)
+        super().setUp()
         self.view = flow.RadvizView(channels = ["B1-A", 'V2-A', 'Y2-A'])
         
     def testPlot(self):
@@ -117,9 +117,11 @@ class TestRadviz(ImportedDataTest):
         self.view.plot(self.ex, s = 5)
         
     def testMarker(self):
+        import matplotlib.pyplot
         for mk in ["o", ",", "v", "^", "<", ">", "1", "2", "3", "4", "8",
                        "s", "p", "*", "h", "H", "+", "x", "D", "d", ""]:
             self.view.plot(self.ex, marker = mk)
+            matplotlib.pyplot.close('all')
 
         
 if __name__ == "__main__":

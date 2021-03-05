@@ -2,7 +2,7 @@
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -405,9 +405,6 @@ class ImportOp(HasStrictTraits):
             tube_meta['CF_File'] = Path(tube.file).stem
                              
             experiment.metadata['fcs_metadata'][tube.file] = tube_meta
-                 
-#         import sys;sys.path.append(r'/home/brian/.p2/pool/plugins/org.python.pydev_6.1.0.201711051306/pysrc')
-#         import pydevd;pydevd.settrace()
                         
         for channel in channels:
             if self.channels and channel in self.channels:

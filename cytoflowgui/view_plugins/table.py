@@ -2,7 +2,7 @@
 # coding: latin-1
 
 # (c) Massachusetts Institute of Technology 2015-2018
-# (c) Brian Teague 2018-2019
+# (c) Brian Teague 2018-2021
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -257,7 +257,8 @@ def _dump(view):
                 subrow_facet = view.subrow_facet,
                 column_facet = view.column_facet,
                 subcolumn_facet = view.subcolumn_facet,
-                subset_list = view.subset_list)
+                subset_list = view.subset_list,
+                current_plot = view.current_plot)
     
 @camel_registry.loader('table-view', version = 1)
 def _load(data, version):
