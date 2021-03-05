@@ -217,7 +217,8 @@ class QuadOp(HasStrictTraits):
         # lower-left
         ll = np.logical_and(experiment[self.xchannel] < self.xthreshold,
                             experiment[self.ychannel] < self.ythreshold)
-        gate.loc[ll] = self.name + '_3'
+        gate.loc[ll] = self.name + '_4'
+        # gate.loc[ll] = self.name + '_3'
         
         # upper-left
         ul = np.logical_and(experiment[self.xchannel] < self.xthreshold,
@@ -232,7 +233,8 @@ class QuadOp(HasStrictTraits):
         # lower-right
         lr = np.logical_and(experiment[self.xchannel] > self.xthreshold,
                             experiment[self.ychannel] < self.ythreshold)
-        gate.loc[lr] = self.name + '_4'
+        gate.loc[lr] = self.name + '_3'
+        # gate.loc[lr] = self.name + '_4'
 
         new_experiment = experiment.clone()
         new_experiment.add_condition(self.name, "category", gate)
